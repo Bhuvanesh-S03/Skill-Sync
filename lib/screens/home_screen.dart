@@ -11,7 +11,9 @@ import 'package:skillsync/bloc/auth/skill/skill_state.dart';
 import 'package:skillsync/screens/add_skill_screen.dart';
 import 'package:skillsync/screens/auth_screen.dart';
 import 'package:skillsync/screens/search_screen.dart';
+import 'package:skillsync/widgets/category.dart';
 import 'package:skillsync/widgets/skill_card.dart';
+import 'package:skillsync/widgets/top_skill.dart';
 
 
 class HomeScreen extends StatefulWidget {
