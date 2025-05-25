@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:skillsync/models/skill_model.dart';
 
-
 abstract class SkillEvent extends Equatable {
   const SkillEvent();
 

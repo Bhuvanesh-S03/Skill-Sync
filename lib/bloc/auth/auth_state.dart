@@ -21,11 +21,13 @@ class AuthState extends Equatable {
     UserModel? user,
     String? errorMessage,
     bool? isLoading,
+    bool clearUser = false,
+    bool clearError = false,
   }) {
     return AuthState(
       status: status ?? this.status,
-      user: user ?? this.user,
-      errorMessage: errorMessage,
+      user: clearUser ? null : (user ?? this.user),
+      errorMessage: clearError ? null : errorMessage,
       isLoading: isLoading ?? this.isLoading,
     );
   }
