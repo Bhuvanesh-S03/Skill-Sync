@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skillsync/bloc/auth/auth_bloc.dart';
-import 'package:skillsync/bloc/auth/auth_state.dart';
+
+import 'package:skillsync/bloc/auth/auth_status.dart';
 import 'package:skillsync/screens/home_screen.dart';
 import 'package:skillsync/screens/auth_screen.dart';
 

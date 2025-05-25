@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skillsync/bloc/auth/auth_bloc.dart';
 import 'package:skillsync/bloc/auth/auth_event.dart';
-import 'package:skillsync/bloc/auth/auth_state.dart';
+import 'package:skillsync/bloc/auth/auth_status.dart';
+
 import 'package:skillsync/bloc/auth/search/search_bloc.dart';
 import 'package:skillsync/bloc/auth/skill/skill_bloc.dart';
 import 'package:skillsync/bloc/auth/skill/skill_event.dart';
+import 'package:skillsync/bloc/auth/skill/skill_state.dart';
 import 'package:skillsync/screens/add_skill_screen.dart';
 import 'package:skillsync/screens/auth_screen.dart';
 import 'package:skillsync/screens/search_screen.dart';
 import 'package:skillsync/widgets/skill_card.dart';
-import 'package:skillsync/widgets/top_skills_widget.dart';
-import 'package:skillsync/widgets/category_chips.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

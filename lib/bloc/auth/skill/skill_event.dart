@@ -27,3 +27,13 @@ class SkillDeleteRequested extends SkillEvent {
   @override
   List<Object> get props => [skillId];
 }
+
+// Add the missing SkillsUpdated event
+class SkillsUpdated extends SkillEvent {
+  final List<SkillModel> skills;
+
+  const SkillsUpdated(this.skills);
+
+  @override
+  List<Object> get props => [skills];
+}

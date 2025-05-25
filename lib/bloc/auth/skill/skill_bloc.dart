@@ -15,7 +15,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     on<SkillLoadRequested>(_onSkillLoadRequested);
     on<SkillAddRequested>(_onSkillAddRequested);
     on<SkillDeleteRequested>(_onSkillDeleteRequested);
-    on<_SkillsUpdated>(_onSkillsUpdated);
+    on<SkillsUpdated>(_onSkillsUpdated);
   }
 
   void _onSkillLoadRequested(
@@ -25,7 +25,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     emit(state.copyWith(status: SkillStatus.loading));
     _skillSubscription?.cancel();
     _skillSubscription = _skillRepository.getSkills().listen(
-      (skills) => add(_SkillsUpdated(skills)),
+      (skills) => add(SkillsUpdated(skills)),
       onError:
           (error) => emit(
             state.copyWith(
@@ -36,7 +36,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     );
   }
 
-  void _onSkillsUpdated(_SkillsUpdated event, Emitter<SkillState> emit) {
+  void _onSkillsUpdated(SkillsUpdated event, Emitter<SkillState> emit) {
     emit(
       state.copyWith(
         status: SkillStatus.loaded,
@@ -53,7 +53,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     try {
       emit(state.copyWith(status: SkillStatus.loading));
       await _skillRepository.addSkill(event.skill);
-      // Don't manually trigger reload - the stream will update automatically
+      // Stream will update automatically
     } catch (e) {
       emit(
         state.copyWith(status: SkillStatus.error, errorMessage: e.toString()),
@@ -68,7 +68,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     try {
       emit(state.copyWith(status: SkillStatus.loading));
       await _skillRepository.deleteSkill(event.skillId);
-      // Don't manually trigger reload - the stream will update automatically
+      // Stream will update automatically
     } catch (e) {
       emit(
         state.copyWith(status: SkillStatus.error, errorMessage: e.toString()),
@@ -81,13 +81,4 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     _skillSubscription?.cancel();
     return super.close();
   }
-}
-
-class _SkillsUpdated extends SkillEvent {
-  final List<SkillModel> skills;
-
-  const _SkillsUpdated(this.skills);
-
-  @override
-  List<Object> get props => [skills];
 }

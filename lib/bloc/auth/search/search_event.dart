@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:skillsync/models/skill_model.dart';
 
 abstract class SearchEvent extends Equatable {
   const SearchEvent();
@@ -27,4 +28,14 @@ class SearchCategoryChanged extends SearchEvent {
 
 class SearchClearRequested extends SearchEvent {
   const SearchClearRequested();
+}
+
+// Add the missing _SearchResultsUpdated event
+class SearchResultsUpdated extends SearchEvent {
+  final List<SkillModel> skills;
+
+  const SearchResultsUpdated(this.skills);
+
+  @override
+  List<Object> get props => [skills];
 }

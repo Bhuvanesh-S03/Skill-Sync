@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skillsync/bloc/auth/search/search_event.dart';
-import 'package:skillsync/bloc/auth/search/search_status.dart';
-
+import 'package:skillsync/bloc/auth/search/search_state.dart';
 import 'package:skillsync/models/skill_model.dart';
 import 'package:skillsync/repositories/skill_repository.dart';
 
@@ -16,7 +15,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     on<SearchQueryChanged>(_onSearchQueryChanged);
     on<SearchCategoryChanged>(_onSearchCategoryChanged);
     on<SearchClearRequested>(_onSearchClearRequested);
-    on<_SearchResultsUpdated>(_onSearchResultsUpdated);
+    on<SearchResultsUpdated>(_onSearchResultsUpdated);
   }
 
   void _onSearchQueryChanged(
@@ -49,7 +48,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
   }
 
   void _onSearchResultsUpdated(
-    _SearchResultsUpdated event,
+    SearchResultsUpdated event,
     Emitter<SearchState> emit,
   ) {
     final filteredSkills = _filterSkills(event.skills);
@@ -64,7 +63,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
 
     _skillSubscription?.cancel();
     _skillSubscription = _skillRepository.getSkills().listen(
-      (skills) => add(_SearchResultsUpdated(skills)),
+      (skills) => add(SearchResultsUpdated(skills)),
       onError:
           (error) => emit(
             state.copyWith(
@@ -96,13 +95,4 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     _skillSubscription?.cancel();
     return super.close();
   }
-}
-
-class _SearchResultsUpdated extends SearchEvent {
-  final List<SkillModel> skills;
-
-  const _SearchResultsUpdated(this.skills);
-
-  @override
-  List<Object> get props => [skills];
 }

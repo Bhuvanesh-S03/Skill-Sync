@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skillsync/bloc/auth/auth_event.dart';
-import 'package:skillsync/bloc/auth/auth_state.dart';
+import 'package:skillsync/bloc/auth/auth_status.dart';
 import 'package:skillsync/repositories/auth_repository.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {

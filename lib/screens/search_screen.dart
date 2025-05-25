@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skillsync/bloc/auth/search/search_bloc.dart';
 import 'package:skillsync/widgets/skill_card.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:skillsync/bloc/auth/search/search_bloc.dart';
+import 'package:skillsync/bloc/auth/search/search_event.dart';
+import 'package:skillsync/bloc/auth/search/search_state.dart';
+import 'package:skillsync/widgets/skill_card.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
