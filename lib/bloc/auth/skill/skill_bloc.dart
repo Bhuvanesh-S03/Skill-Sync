@@ -15,7 +15,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     on<SkillLoadRequested>(_onSkillLoadRequested);
     on<SkillAddRequested>(_onSkillAddRequested);
     on<SkillDeleteRequested>(_onSkillDeleteRequested);
-    on<_SkillsUpdated>(_onSkillsUpdated); // Add handler for the private event
+    on<_SkillsUpdated>(_onSkillsUpdated);
   }
 
   void _onSkillLoadRequested(
@@ -26,11 +26,24 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     _skillSubscription?.cancel();
     _skillSubscription = _skillRepository.getSkills().listen(
       (skills) => add(_SkillsUpdated(skills)),
+      onError:
+          (error) => emit(
+            state.copyWith(
+              status: SkillStatus.error,
+              errorMessage: error.toString(),
+            ),
+          ),
     );
   }
 
   void _onSkillsUpdated(_SkillsUpdated event, Emitter<SkillState> emit) {
-    emit(state.copyWith(status: SkillStatus.loaded, skills: event.skills));
+    emit(
+      state.copyWith(
+        status: SkillStatus.loaded,
+        skills: event.skills,
+        errorMessage: null,
+      ),
+    );
   }
 
   void _onSkillAddRequested(
@@ -40,7 +53,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     try {
       emit(state.copyWith(status: SkillStatus.loading));
       await _skillRepository.addSkill(event.skill);
-      add(SkillLoadRequested()); // Refresh the list after adding
+      // Don't manually trigger reload - the stream will update automatically
     } catch (e) {
       emit(
         state.copyWith(status: SkillStatus.error, errorMessage: e.toString()),
@@ -55,7 +68,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     try {
       emit(state.copyWith(status: SkillStatus.loading));
       await _skillRepository.deleteSkill(event.skillId);
-      add(SkillLoadRequested()); // Refresh the list after deletion
+      // Don't manually trigger reload - the stream will update automatically
     } catch (e) {
       emit(
         state.copyWith(status: SkillStatus.error, errorMessage: e.toString()),

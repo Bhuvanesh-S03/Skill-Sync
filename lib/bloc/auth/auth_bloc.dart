@@ -3,7 +3,6 @@ import 'package:skillsync/bloc/auth/auth_event.dart';
 import 'package:skillsync/bloc/auth/auth_state.dart';
 import 'package:skillsync/repositories/auth_repository.dart';
 
-
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
 
@@ -20,12 +19,34 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthCheckRequested event,
     Emitter<AuthState> emit,
   ) async {
-    final user = _authRepository.currentUser;
-    if (user != null) {
-      final userData = await _authRepository.getUserData(user.uid);
-      emit(state.copyWith(status: AuthStatus.authenticated, user: userData));
-    } else {
-      emit(state.copyWith(status: AuthStatus.unauthenticated));
+    try {
+      final user = _authRepository.currentUser;
+      if (user != null) {
+        final userData = await _authRepository.getUserData(user.uid);
+        emit(
+          state.copyWith(
+            status: AuthStatus.authenticated,
+            user: userData,
+            clearError: true,
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            status: AuthStatus.unauthenticated,
+            clearUser: true,
+            clearError: true,
+          ),
+        );
+      }
+    } catch (e) {
+      emit(
+        state.copyWith(
+          status: AuthStatus.unauthenticated,
+          errorMessage: e.toString(),
+          clearUser: true,
+        ),
+      );
     }
   }
 
@@ -33,7 +54,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSignUpRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(isLoading: true, errorMessage: null));
+    emit(state.copyWith(isLoading: true, clearError: true));
     try {
       final user = await _authRepository.signUpWithEmailAndPassword(
         email: event.email,
@@ -45,6 +66,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           state.copyWith(
             status: AuthStatus.authenticated,
             user: user,
+            isLoading: false,
+            clearError: true,
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            errorMessage: 'Failed to create account',
             isLoading: false,
           ),
         );
@@ -58,7 +87,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSignInRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(isLoading: true, errorMessage: null));
+    emit(state.copyWith(isLoading: true, clearError: true));
     try {
       final user = await _authRepository.signInWithEmailAndPassword(
         email: event.email,
@@ -70,7 +99,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             status: AuthStatus.authenticated,
             user: user,
             isLoading: false,
+            clearError: true,
           ),
+        );
+      } else {
+        emit(
+          state.copyWith(errorMessage: 'Failed to sign in', isLoading: false),
         );
       }
     } catch (e) {
@@ -82,7 +116,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSignOutRequested event,
     Emitter<AuthState> emit,
   ) async {
-    await _authRepository.signOut();
-    emit(state.copyWith(status: AuthStatus.unauthenticated, user: null));
+    try {
+      await _authRepository.signOut();
+      emit(
+        state.copyWith(
+          status: AuthStatus.unauthenticated,
+          clearUser: true,
+          clearError: true,
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(errorMessage: e.toString()));
+    }
   }
 }

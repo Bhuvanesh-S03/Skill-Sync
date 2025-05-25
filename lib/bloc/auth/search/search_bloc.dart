@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skillsync/bloc/auth/search/search_event.dart';
-import 'package:skillsync/bloc/search/search_event.dart';
-import 'package:skillsync/bloc/search/search_state.dart';
+import 'package:skillsync/bloc/auth/search/search_status.dart';
 import 'package:skillsync/models/skill_model.dart';
 import 'package:skillsync/repositories/skill_repository.dart';
 
@@ -65,6 +64,13 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     _skillSubscription?.cancel();
     _skillSubscription = _skillRepository.getSkills().listen(
       (skills) => add(_SearchResultsUpdated(skills)),
+      onError:
+          (error) => emit(
+            state.copyWith(
+              status: SearchStatus.error,
+              errorMessage: error.toString(),
+            ),
+          ),
     );
   }
 
