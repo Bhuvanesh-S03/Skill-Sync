@@ -39,8 +39,8 @@ class SkillSyncApp extends StatelessWidget {
         RepositoryProvider<AuthRepository>(
           create: (context) => AuthRepository(),
         ),
-        RepositoryProvider<SkillRepository>(
-          create: (context) => SkillRepository(),
+        RepositoryProvider<FirebaseSkillRepository>(
+          create: (context) => FirebaseSkillRepository(),
         ),
       ],
       child: MultiBlocProvider(
@@ -54,7 +54,7 @@ class SkillSyncApp extends StatelessWidget {
           BlocProvider<SkillBloc>(
             create:
                 (context) =>
-                    SkillBloc(skillRepository: context.read<SkillRepository>()),
+                    SkillBloc(skillRepository: context.read<FirebaseSkillRepository>()),
           ),
         ],
         child: MaterialApp(

@@ -1,152 +1,108 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:skillsync/models/skill_model.dart';
 
-class SkillRepository {
+class FirebaseSkillRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final String _collection = 'skills';
 
-  // Get all skills with real-time updates
-  Stream<List<SkillModel>> getSkills() {
+  // ✅ Real-time stream of all skills
+  Stream<List<SkillModel>> getSkillsStream() {
     return _firestore
-        .collection('skills')
+        .collection(_collection)
         .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) =>
-              snapshot.docs
-                  .map((doc) => SkillModel.fromMap(doc.data(), doc.id))
-                  .toList(),
-        );
-  }
-
-  // Get top skills by category with real-time updates
-  Stream<List<SkillModel>> getTopSkillsByCategory() {
-    return _firestore
-        .collection('skills')
-        .orderBy('createdAt', descending: true)
-        .limit(20)
         .snapshots()
         .map((snapshot) {
-          final skills =
-              snapshot.docs
-                  .map((doc) => SkillModel.fromMap(doc.data(), doc.id))
-                  .toList();
-
-          // Group by category and get top skills from each
-          final Map<String, List<SkillModel>> skillsByCategory = {};
-          for (final skill in skills) {
-            if (!skillsByCategory.containsKey(skill.category)) {
-              skillsByCategory[skill.category] = [];
-            }
-            if (skillsByCategory[skill.category]!.length < 3) {
-              skillsByCategory[skill.category]!.add(skill);
-            }
-          }
-
-          // Flatten and return
-          final topSkills = <SkillModel>[];
-          skillsByCategory.values.forEach((categorySkills) {
-            topSkills.addAll(categorySkills);
-          });
-
-          return topSkills;
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            return SkillModel(
+              id: doc.id,
+              name: data['name'] ?? '',
+              description: data['description'] ?? '',
+              category: data['category'] ?? '',
+              userId: data['userId'] ?? '',
+              userName: data['userName'] ?? '',
+              createdAt:
+                  (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            );
+          }).toList();
         });
   }
 
-  // Get skills by category with real-time updates
-  Stream<List<SkillModel>> getSkillsByCategory(String category) {
+  // ✅ Optional: Alias for getSkillsStream() (if used in bloc as getSkills())
+  Stream<List<SkillModel>> getSkills() => getSkillsStream();
+
+  // ✅ Stream filtered by category
+  Stream<List<SkillModel>> getSkillsByCategoryStream(String category) {
     return _firestore
-        .collection('skills')
+        .collection(_collection)
         .where('category', isEqualTo: category)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-          (snapshot) =>
-              snapshot.docs
-                  .map((doc) => SkillModel.fromMap(doc.data(), doc.id))
-                  .toList(),
-        );
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            return SkillModel(
+              id: doc.id,
+              name: data['name'] ?? '',
+              description: data['description'] ?? '',
+              category: data['category'] ?? '',
+              userId: data['userId'] ?? '',
+              userName: data['userName'] ?? '',
+              createdAt:
+                  (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            );
+          }).toList();
+        });
   }
 
-  // Search skills with real-time updates
-  Stream<List<SkillModel>> searchSkills({String? query, String? category}) {
-    Query<Map<String, dynamic>> skillsQuery = _firestore.collection('skills');
-
-    if (category != null && category.isNotEmpty) {
-      skillsQuery = skillsQuery.where('category', isEqualTo: category);
-    }
-
-    return skillsQuery.orderBy('createdAt', descending: true).snapshots().map((
-      snapshot,
-    ) {
-      List<SkillModel> skills =
-          snapshot.docs
-              .map((doc) => SkillModel.fromMap(doc.data(), doc.id))
-              .toList();
-
-      if (query != null && query.isNotEmpty) {
-        final lowercaseQuery = query.toLowerCase();
-        skills =
-            skills.where((skill) {
-              return skill.name.toLowerCase().contains(lowercaseQuery) ||
-                  skill.description.toLowerCase().contains(lowercaseQuery) ||
-                  skill.userName.toLowerCase().contains(lowercaseQuery);
-            }).toList();
-      }
-
-      return skills;
+  // ✅ Add new skill
+  Future<void> addSkill(SkillModel skill) async {
+    await _firestore.collection(_collection).add({
+      'name': skill.name,
+      'description': skill.description,
+      'category': skill.category,
+      'userId': skill.userId,
+      'userName': skill.userName,
+      'createdAt': FieldValue.serverTimestamp(),
     });
   }
 
-  // Get trending skills (most recently added)
-  Stream<List<SkillModel>> getTrendingSkills({int limit = 10}) {
+  // ✅ Search skill stream by name prefix
+  Stream<List<SkillModel>> searchSkillsStream(String query) {
     return _firestore
-        .collection('skills')
-        .orderBy('createdAt', descending: true)
-        .limit(limit)
+        .collection(_collection)
+        .where('name', isGreaterThanOrEqualTo: query)
+        .where('name', isLessThan: query + 'z')
         .snapshots()
-        .map(
-          (snapshot) =>
-              snapshot.docs
-                  .map((doc) => SkillModel.fromMap(doc.data(), doc.id))
-                  .toList(),
-        );
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            return SkillModel(
+              id: doc.id,
+              name: data['name'] ?? '',
+              description: data['description'] ?? '',
+              category: data['category'] ?? '',
+              userId: data['userId'] ?? '',
+              userName: data['userName'] ?? '',
+              createdAt:
+                  (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            );
+          }).toList();
+        });
   }
 
-  Future<void> addSkill(SkillModel skill) async {
-    await _firestore.collection('skills').add(skill.toMap());
-  }
-
+  // ✅ Delete skill
   Future<void> deleteSkill(String skillId) async {
-    await _firestore.collection('skills').doc(skillId).delete();
+    await _firestore.collection(_collection).doc(skillId).delete();
   }
 
-  Stream<List<SkillModel>> getUserSkills(String userId) {
-    return _firestore
-        .collection('skills')
-        .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) =>
-              snapshot.docs
-                  .map((doc) => SkillModel.fromMap(doc.data(), doc.id))
-                  .toList(),
-        );
-  }
-
-  // Get skill statistics
-  Future<Map<String, int>> getSkillStatistics() async {
-    final snapshot = await _firestore.collection('skills').get();
-    final skills =
-        snapshot.docs
-            .map((doc) => SkillModel.fromMap(doc.data(), doc.id))
-            .toList();
-
-    final Map<String, int> stats = {};
-    for (final skill in skills) {
-      stats[skill.category] = (stats[skill.category] ?? 0) + 1;
-    }
-
-    return stats;
+  // ✅ Update skill
+  Future<void> updateSkill(String skillId, SkillModel skill) async {
+    await _firestore.collection(_collection).doc(skillId).update({
+      'name': skill.name,
+      'description': skill.description,
+      'category': skill.category,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 }

@@ -6,10 +6,10 @@ import 'package:skillsync/models/skill_model.dart';
 import 'package:skillsync/repositories/skill_repository.dart';
 
 class SearchBloc extends Bloc<SearchEvent, SearchState> {
-  final SkillRepository _skillRepository;
+  final FirebaseSkillRepository _skillRepository;
   StreamSubscription? _skillSubscription;
 
-  SearchBloc({required SkillRepository skillRepository})
+  SearchBloc({required FirebaseSkillRepository skillRepository})
     : _skillRepository = skillRepository,
       super(const SearchState()) {
     on<SearchQueryChanged>(_onSearchQueryChanged);

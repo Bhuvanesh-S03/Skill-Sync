@@ -18,11 +18,12 @@ class SkillState extends Equatable {
     SkillStatus? status,
     List<SkillModel>? skills,
     String? errorMessage,
+    bool clearError = false,
   }) {
     return SkillState(
       status: status ?? this.status,
       skills: skills ?? this.skills,
-      errorMessage: errorMessage,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
 

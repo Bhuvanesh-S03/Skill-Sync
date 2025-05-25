@@ -2,14 +2,13 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skillsync/bloc/auth/skill/skill_event.dart';
 import 'package:skillsync/bloc/auth/skill/skill_state.dart';
-import 'package:skillsync/models/skill_model.dart';
 import 'package:skillsync/repositories/skill_repository.dart';
 
 class SkillBloc extends Bloc<SkillEvent, SkillState> {
-  final SkillRepository _skillRepository;
+  final FirebaseSkillRepository _skillRepository;
   StreamSubscription? _skillSubscription;
 
-  SkillBloc({required SkillRepository skillRepository})
+  SkillBloc({required FirebaseSkillRepository skillRepository})
     : _skillRepository = skillRepository,
       super(const SkillState()) {
     on<SkillLoadRequested>(_onSkillLoadRequested);
@@ -22,9 +21,9 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     SkillLoadRequested event,
     Emitter<SkillState> emit,
   ) {
-    emit(state.copyWith(status: SkillStatus.loading));
+    emit(state.copyWith(status: SkillStatus.loading, clearError: true));
     _skillSubscription?.cancel();
-    _skillSubscription = _skillRepository.getSkills().listen(
+    _skillSubscription = _skillRepository.getSkillsStream().listen(
       (skills) => add(SkillsUpdated(skills)),
       onError:
           (error) => emit(
@@ -41,7 +40,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
       state.copyWith(
         status: SkillStatus.loaded,
         skills: event.skills,
-        errorMessage: null,
+        clearError: true,
       ),
     );
   }
@@ -51,9 +50,8 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     Emitter<SkillState> emit,
   ) async {
     try {
-      emit(state.copyWith(status: SkillStatus.loading));
+      emit(state.copyWith(status: SkillStatus.loading, clearError: true));
       await _skillRepository.addSkill(event.skill);
-      // Stream will update automatically
     } catch (e) {
       emit(
         state.copyWith(status: SkillStatus.error, errorMessage: e.toString()),
@@ -66,9 +64,8 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     Emitter<SkillState> emit,
   ) async {
     try {
-      emit(state.copyWith(status: SkillStatus.loading));
+      emit(state.copyWith(status: SkillStatus.loading, clearError: true));
       await _skillRepository.deleteSkill(event.skillId);
-      // Stream will update automatically
     } catch (e) {
       emit(
         state.copyWith(status: SkillStatus.error, errorMessage: e.toString()),
