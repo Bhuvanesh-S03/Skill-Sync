@@ -3,18 +3,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skillsync/bloc/auth/auth_bloc.dart';
 import 'package:skillsync/bloc/auth/auth_event.dart';
 import 'package:skillsync/bloc/auth/auth_status.dart';
-
 import 'package:skillsync/bloc/auth/search/search_bloc.dart';
 import 'package:skillsync/bloc/auth/skill/skill_bloc.dart';
 import 'package:skillsync/bloc/auth/skill/skill_event.dart';
 import 'package:skillsync/bloc/auth/skill/skill_state.dart';
+import 'package:skillsync/repositories/firebase_chat.dart';
+
 import 'package:skillsync/screens/add_skill_screen.dart';
 import 'package:skillsync/screens/auth_screen.dart';
+import 'package:skillsync/screens/chat_list_screeen.dart';
+import 'package:skillsync/screens/chat_screen.dart';
 import 'package:skillsync/screens/search_screen.dart';
+
 import 'package:skillsync/widgets/category.dart';
 import 'package:skillsync/widgets/skill_card.dart';
-import 'package:skillsync/widgets/top_skill.dart';
-
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -70,6 +72,36 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
+            // Chat List Button
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, authState) {
+                return IconButton(
+                  icon: const Icon(Icons.chat),
+                  onPressed: () {
+                    if (authState.user != null) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ChatListScreen(
+                                currentUser: authState.user!,
+                                chatRepository: FirebaseChatService(),
+       
+                              ),
+
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please log in to access chats'),
+                        ),
+                      );
+                    }
+                  },
+                );
+              },
+            ),
+
             // User Profile Menu
             BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {
@@ -89,6 +121,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   onSelected: (value) {
                     if (value == 'logout') {
                       context.read<AuthBloc>().add(AuthSignOutRequested());
+                    } else if (value == 'profile') {
+                      _showProfileDialog(context, state.user);
                     }
                   },
                   itemBuilder:
@@ -102,9 +136,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const PopupMenuDivider(),
-                        PopupMenuItem<String>(
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: ListTile(
+                            leading: Icon(Icons.settings),
+                            title: Text('Settings'),
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        const PopupMenuItem<String>(
                           value: 'logout',
-                          child: const ListTile(
+                          child: ListTile(
                             leading: Icon(Icons.logout, color: Colors.red),
                             title: Text(
                               'Sign Out',
@@ -183,14 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
-                // Top Skills Section
-                const TopSkillsWidget(),
-
-                const SizedBox(height: 16),
-
                 // Category Filter
                 CategoryChips(
                   selectedCategory: _selectedCategory,
@@ -198,14 +233,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     setState(() {
                       _selectedCategory = category;
                     });
-                    // Trigger skill filtering
                     context.read<SkillBloc>().add(SkillLoadRequested());
                   },
                 ),
-
                 const SizedBox(height: 16),
-
-                // Skills List
+                // Skills List Header
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
@@ -240,7 +272,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-
                 // Skills Content
                 BlocBuilder<SkillBloc, SkillState>(
                   builder: (context, state) {
@@ -250,7 +281,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Center(child: CircularProgressIndicator()),
                       );
                     }
-
                     if (state.status == SkillStatus.error) {
                       return Padding(
                         padding: const EdgeInsets.all(32),
@@ -284,7 +314,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       );
                     }
-
                     final skills =
                         _selectedCategory == null
                             ? state.skills
@@ -294,7 +323,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                       skill.category == _selectedCategory,
                                 )
                                 .toList();
-
                     if (skills.isEmpty) {
                       return Padding(
                         padding: const EdgeInsets.all(32),
@@ -336,7 +364,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       );
                     }
-
                     return ListView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -346,14 +373,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         final skill = skills[index];
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: SkillCard(skill: skill),
+                          child: SkillCard(
+                            skillName: skill.name,
+                            description: skill.description,
+                            otherUserId: skill.userId,
+                            otherUserName: skill.userName, chatRepository: FirebaseChatService(),
+                          ),
                         );
                       },
                     );
                   },
                 ),
-
-                const SizedBox(height: 80), // Bottom padding for FAB
+                const SizedBox(height: 100), // Bottom padding for FAB
               ],
             ),
           ),
@@ -364,9 +395,101 @@ class _HomeScreenState extends State<HomeScreen> {
               context,
             ).push(MaterialPageRoute(builder: (_) => const AddSkillScreen()));
           },
+          backgroundColor: Theme.of(context).colorScheme.primary,
           child: const Icon(Icons.add),
         ),
       ),
+    );
+  }
+
+  void _showProfileDialog(BuildContext context, dynamic user) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Profile'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      child: Text(
+                        user?.name?.isNotEmpty == true
+                            ? user!.name[0].toUpperCase()
+                            : 'U',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user?.name ?? 'User',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            user?.email ?? '',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.school),
+                  title: const Text('My Skills'),
+                  subtitle: const Text('Manage your shared skills'),
+                  contentPadding: EdgeInsets.zero,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    // Navigate to user's skills
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.favorite),
+                  title: const Text('Saved Skills'),
+                  subtitle: const Text('View your bookmarked skills'),
+                  contentPadding: EdgeInsets.zero,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    // Navigate to saved skills
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Navigate to edit profile
+                },
+                child: const Text('Edit Profile'),
+              ),
+            ],
+          ),
     );
   }
 }

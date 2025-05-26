@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skillsync/bloc/auth/search/search_bloc.dart';
-import 'package:skillsync/widgets/skill_card.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skillsync/bloc/auth/search/search_bloc.dart';
 import 'package:skillsync/bloc/auth/search/search_event.dart';
 import 'package:skillsync/bloc/auth/search/search_state.dart';
-import 'package:skillsync/widgets/skill_card.dart';
+import 'package:skillsync/models/skill_model.dart'; // <-- Import your SkillModel
+import 'package:skillsync/repositories/firebase_chat.dart';
+import 'package:skillsync/widgets/skill_card.dart' show SkillCard;
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -138,19 +136,15 @@ class _SearchScreenState extends State<SearchScreen> {
                 if (state.status == SearchStatus.initial) {
                   return _buildInitialState();
                 }
-
                 if (state.status == SearchStatus.loading) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
                 if (state.status == SearchStatus.error) {
                   return _buildErrorState(state.errorMessage);
                 }
-
-                if (state.results.isEmpty) {
+                if (state.results == null || state.results.isEmpty) {
                   return _buildEmptyState(state.query);
                 }
-
                 return _buildResults(state.results);
               },
             ),
@@ -228,15 +222,23 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildResults(List<dynamic> results) {
+  // Changed here: accept List<SkillModel> instead of List<Map<String, dynamic>>
+ Widget _buildResults(List<SkillModel> results) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: results.length,
       itemBuilder: (context, index) {
-        return SkillCard(skill: results[index]);
+        final skill = results[index];
+        return SkillCard(
+          skillName: skill.name,
+          description: skill.description,
+          otherUserId: skill.userId,
+          otherUserName: skill.userName, chatRepository: FirebaseChatService(),
+        );
       },
     );
   }
+
 
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
