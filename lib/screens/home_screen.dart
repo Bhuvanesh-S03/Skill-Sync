@@ -8,12 +8,15 @@ import 'package:skillsync/bloc/skill/skill_bloc.dart';
 import 'package:skillsync/bloc/skill/skill_event.dart';
 import 'package:skillsync/bloc/skill/skill_state.dart';
 import 'package:skillsync/repositories/firebase_chat.dart';
+import 'package:skillsync/repositories/request_repository.dart';
 import 'package:skillsync/screens/add_skill_screen.dart';
 import 'package:skillsync/screens/auth_screen.dart';
 import 'package:skillsync/screens/chat_list_screeen.dart';
 import 'package:skillsync/screens/search_screen.dart';
+import 'package:skillsync/screens/request_screen.dart';
 import 'package:skillsync/widgets/category.dart';
 import 'package:skillsync/widgets/skill_card.dart';
+import 'package:skillsync/models/skill_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,11 +27,29 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String? _selectedCategory;
+  final RequestRepository _requestRepository = RequestRepository();
+  final FirebaseChatService _chatRepository = FirebaseChatService();
+  List<SkillModel> _currentUserSkills = [];
 
   @override
   void initState() {
     super.initState();
     context.read<SkillBloc>().add(SkillLoadRequested());
+    _loadCurrentUserSkills();
+  }
+
+  void _loadCurrentUserSkills() {
+    // Load current user's skills for skill swap functionality
+    final authState = context.read<AuthBloc>().state;
+    if (authState.user != null) {
+      _requestRepository.getUserSkills(authState.user!.id).listen((skills) {
+        if (mounted) {
+          setState(() {
+            _currentUserSkills = skills;
+          });
+        }
+      });
+    }
   }
 
   @override
@@ -69,6 +90,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
+            // Requests Button - NEW
+            IconButton(
+              icon: const Icon(Icons.swap_horiz),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder:
+                        (_) => RequestsScreen(
+                          requestRepository: _requestRepository,
+                          chatRepository: _chatRepository,
+                        ),
+                  ),
+                );
+              },
+            ),
             // Chat List Button
             BlocBuilder<AuthBloc, AuthState>(
               builder: (context, authState) {
@@ -81,10 +117,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           builder:
                               (_) => ChatListScreen(
                                 currentUser: authState.user!,
-                                chatRepository: FirebaseChatService(),
-       
+                                chatRepository: _chatRepository,
                               ),
-
                         ),
                       );
                     } else {
@@ -98,7 +132,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-
             // User Profile Menu
             BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {
@@ -120,6 +153,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       context.read<AuthBloc>().add(AuthSignOutRequested());
                     } else if (value == 'profile') {
                       _showProfileDialog(context, state.user);
+                    } else if (value == 'requests') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (_) => RequestsScreen(
+                                requestRepository: _requestRepository,
+                                chatRepository: _chatRepository,
+                              ),
+                        ),
+                      );
                     }
                   },
                   itemBuilder:
@@ -130,6 +173,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             leading: const Icon(Icons.person),
                             title: Text(state.user?.name ?? 'User'),
                             subtitle: Text(state.user?.email ?? ''),
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        const PopupMenuItem<String>(
+                          value: 'requests',
+                          child: ListTile(
+                            leading: Icon(Icons.swap_horiz),
+                            title: Text('Skill Requests'),
                           ),
                         ),
                         const PopupMenuDivider(),
@@ -160,6 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
         body: RefreshIndicator(
           onRefresh: () async {
             context.read<SkillBloc>().add(SkillLoadRequested());
+            _loadCurrentUserSkills();
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -374,7 +426,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             skillName: skill.name,
                             description: skill.description,
                             otherUserId: skill.userId,
-                            otherUserName: skill.userName, chatRepository: FirebaseChatService(),
+                            otherUserName: skill.userName,
+                            chatRepository: _chatRepository,
+                            // Enhanced features
+                            category: skill.category,
+                            createdAt: skill.createdAt,
+                            skillId: skill.id,
+                            requestRepository: _requestRepository,
+                            currentUserSkills: _currentUserSkills,
                           ),
                         );
                       },
@@ -454,11 +513,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 ListTile(
                   leading: const Icon(Icons.school),
                   title: const Text('My Skills'),
-                  subtitle: const Text('Manage your shared skills'),
+                  subtitle: Text('${_currentUserSkills.length} skills shared'),
                   contentPadding: EdgeInsets.zero,
                   onTap: () {
                     Navigator.of(context).pop();
                     // Navigate to user's skills
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.swap_horiz),
+                  title: const Text('Skill Requests'),
+                  subtitle: const Text('Manage your skill swap requests'),
+                  contentPadding: EdgeInsets.zero,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder:
+                            (_) => RequestsScreen(
+                              requestRepository: _requestRepository,
+                              chatRepository: _chatRepository,
+                            ),
+                      ),
+                    );
                   },
                 ),
                 ListTile(

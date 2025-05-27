@@ -29,7 +29,8 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
   void _onSearchCategoryChanged(
     SearchCategoryChanged event,
     Emitter<SearchState> emit,
-  ) {
+  ) 
+  {
     emit(
       state.copyWith(
         selectedCategory: event.category,
