@@ -40,15 +40,15 @@ class ChatListScreen extends StatelessWidget {
             return const Center(child: Text('No chats yet'));
           }
           if (snapshot.hasError) {
-            print('Stream error: ${snapshot.error}');
-            return Center(
-              child: Text(
-                'Error loading chats:\n${snapshot.error}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          }
+  print('Stream error: ${snapshot.error}');
+  return Center(
+    child: Text(
+      'Error loading chats:\n${snapshot.error}',
+      textAlign: TextAlign.center,
+      style: const TextStyle(color: Colors.red),
+    ),
+  );
+}
 
 
           final chats = snapshot.data!.docs;

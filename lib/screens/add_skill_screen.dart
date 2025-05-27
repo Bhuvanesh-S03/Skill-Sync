@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skillsync/bloc/auth/auth_bloc.dart';
-import 'package:skillsync/bloc/auth/skill/skill_bloc.dart';
-import 'package:skillsync/bloc/auth/skill/skill_event.dart';
+import 'package:skillsync/bloc/skill/skill_bloc.dart';
+import 'package:skillsync/bloc/skill/skill_event.dart';
 import 'package:skillsync/models/skill_model.dart';
 
 class AddSkillScreen extends StatefulWidget {

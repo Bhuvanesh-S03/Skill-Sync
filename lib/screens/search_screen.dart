@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skillsync/bloc/auth/search/search_bloc.dart';
-import 'package:skillsync/bloc/auth/search/search_event.dart';
-import 'package:skillsync/bloc/auth/search/search_state.dart';
+import 'package:skillsync/bloc/search/search_bloc.dart';
+import 'package:skillsync/bloc/search/search_event.dart';
+import 'package:skillsync/bloc/search/search_state.dart';
 import 'package:skillsync/models/skill_model.dart'; // <-- Import your SkillModel
 import 'package:skillsync/repositories/firebase_chat.dart';
 import 'package:skillsync/widgets/skill_card.dart' show SkillCard;

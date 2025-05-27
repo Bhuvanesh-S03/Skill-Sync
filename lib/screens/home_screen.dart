@@ -3,18 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skillsync/bloc/auth/auth_bloc.dart';
 import 'package:skillsync/bloc/auth/auth_event.dart';
 import 'package:skillsync/bloc/auth/auth_status.dart';
-import 'package:skillsync/bloc/auth/search/search_bloc.dart';
-import 'package:skillsync/bloc/auth/skill/skill_bloc.dart';
-import 'package:skillsync/bloc/auth/skill/skill_event.dart';
-import 'package:skillsync/bloc/auth/skill/skill_state.dart';
+import 'package:skillsync/bloc/search/search_bloc.dart';
+import 'package:skillsync/bloc/skill/skill_bloc.dart';
+import 'package:skillsync/bloc/skill/skill_event.dart';
+import 'package:skillsync/bloc/skill/skill_state.dart';
 import 'package:skillsync/repositories/firebase_chat.dart';
-
 import 'package:skillsync/screens/add_skill_screen.dart';
 import 'package:skillsync/screens/auth_screen.dart';
 import 'package:skillsync/screens/chat_list_screeen.dart';
-import 'package:skillsync/screens/chat_screen.dart';
 import 'package:skillsync/screens/search_screen.dart';
-
 import 'package:skillsync/widgets/category.dart';
 import 'package:skillsync/widgets/skill_card.dart';
 

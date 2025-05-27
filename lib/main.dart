@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:skillsync/bloc/auth/auth_bloc.dart';
 import 'package:skillsync/bloc/auth/auth_event.dart';
-import 'package:skillsync/bloc/auth/skill/skill_bloc.dart';
+import 'package:skillsync/bloc/skill/skill_bloc.dart';
 import 'package:skillsync/repositories/auth_repository.dart';
 import 'package:skillsync/repositories/skill_repository.dart';
 

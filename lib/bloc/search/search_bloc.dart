@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skillsync/bloc/auth/search/search_event.dart';
-import 'package:skillsync/bloc/auth/search/search_state.dart';
+import 'package:skillsync/bloc/search/search_event.dart';
+import 'package:skillsync/bloc/search/search_state.dart';
 import 'package:skillsync/models/skill_model.dart';
 import 'package:skillsync/repositories/skill_repository.dart';
 

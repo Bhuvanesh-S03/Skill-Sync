@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skillsync/bloc/auth/skill/skill_event.dart';
-import 'package:skillsync/bloc/auth/skill/skill_state.dart';
+import 'package:skillsync/bloc/skill/skill_event.dart';
+import 'package:skillsync/bloc/skill/skill_state.dart';
 import 'package:skillsync/repositories/skill_repository.dart';
 
 class SkillBloc extends Bloc<SkillEvent, SkillState> {
