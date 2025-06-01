@@ -142,7 +142,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 if (state.status == SearchStatus.error) {
                   return _buildErrorState(state.errorMessage);
                 }
-                if (state.results == null || state.results.isEmpty) {
+                if (state.results.isEmpty) {
                   return _buildEmptyState(state.query);
                 }
                 return _buildResults(state.results);

@@ -63,10 +63,8 @@ class ChatListScreen extends StatelessWidget {
               final chat = chats[index].data()! as Map<String, dynamic>;
 
               final participants = Map<String, String>.from(chat['participants'] ?? {});
-              final participantIds = List<String>.from(chat['participantIds'] ?? []);
 
               participants.remove(currentUserId);
-              final otherUserId = participants.keys.isNotEmpty ? participants.keys.first : '';
               final otherUserName = participants.values.isNotEmpty ? participants.values.first : 'Unknown';
 
               return ListTile(

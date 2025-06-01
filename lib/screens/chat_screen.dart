@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:skillsync/repositories/firebase_chat.dart';
 
@@ -24,12 +23,10 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
-  late String _currentUserName;
 
   @override
   void initState() {
     super.initState();
-    _currentUserName = FirebaseAuth.instance.currentUser?.displayName ?? 'You';
 
     // Mark messages as read when entering chat
     widget.chatRepository.markMessagesAsRead(widget.chatRoomId);
