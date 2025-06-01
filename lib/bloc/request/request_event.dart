@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skillsync/bloc/request/request_auth';
+import 'package:skillsync/bloc/request/request_state.dart';
 import 'package:skillsync/repositories/request_repository.dart';
 
 class RequestBloc extends Bloc<RequestEvent, RequestState> {
