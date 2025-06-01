@@ -19,6 +19,7 @@ class SkillCard extends StatefulWidget {
   final String? skillId;
   final RequestRepository? requestRepository;
   final List<SkillModel>? currentUserSkills;
+  final VoidCallback? onDelete; // Add delete callback
 
   const SkillCard({
     super.key,
@@ -32,6 +33,7 @@ class SkillCard extends StatefulWidget {
     this.skillId,
     this.requestRepository,
     this.currentUserSkills,
+    this.onDelete, // Add delete parameter
   });
 
   @override
@@ -111,6 +113,33 @@ class _SkillCardState extends State<SkillCard> {
     } else {
       return 'Just now';
     }
+  }
+
+  void _showDeleteConfirmation() {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Skill'),
+            content: Text(
+              'Are you sure you want to delete "${widget.skillName}"?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  widget.onDelete?.call();
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+    );
   }
 
   void _showSkillSwapDialog() {
@@ -268,42 +297,67 @@ class _SkillCardState extends State<SkillCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Category and date row (only show if category is provided)
-            if (widget.category != null || widget.createdAt != null)
-              Row(
-                children: [
-                  if (widget.category != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getCategoryColor(
-                          widget.category!,
-                        ).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
+            // Category, date, and delete icon row
+            Row(
+              children: [
+                // Category chip
+                if (widget.category != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getCategoryColor(
                         widget.category!,
-                        style: TextStyle(
-                          color: _getCategoryColor(widget.category!),
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      ).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      widget.category!,
+                      style: TextStyle(
+                        color: _getCategoryColor(widget.category!),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  const Spacer(),
-                  if (widget.createdAt != null)
-                    Text(
-                      _formatDate(widget.createdAt!),
-                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  ),
+                const Spacer(),
+                // Date text
+                if (widget.createdAt != null)
+                  Text(
+                    _formatDate(widget.createdAt!),
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  ),
+                // Spacing between date and delete icon
+                if (widget.createdAt != null &&
+                    isOwnSkill &&
+                    widget.onDelete != null)
+                  const SizedBox(width: 12),
+                // Delete icon - only show for own skills
+                if (isOwnSkill && widget.onDelete != null)
+                  InkWell(
+                    onTap: _showDeleteConfirmation,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      child: Icon(
+                        Icons.delete_outline,
+                        color: Colors.red[400],
+                        size: 22, // Made icon bigger
+                      ),
                     ),
-                ],
-              ),
-            if (widget.category != null || widget.createdAt != null)
-              const SizedBox(height: 12),
+                  ),
+              ],
+            ),
 
+            // Add some spacing if we have top row elements
+            if (widget.category != null ||
+                widget.createdAt != null ||
+                (isOwnSkill && widget.onDelete != null))
+              const SizedBox(
+                height: 16,
+              ), // Increased spacing to push content down
             // Skill name
             Text(
               widget.skillName,

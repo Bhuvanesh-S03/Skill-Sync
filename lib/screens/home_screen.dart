@@ -420,6 +420,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemCount: skills.length,
                       itemBuilder: (context, index) {
                         final skill = skills[index];
+                        final currentUser = context.read<AuthBloc>().state.user;
+
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: SkillCard(
@@ -427,13 +429,31 @@ class _HomeScreenState extends State<HomeScreen> {
                             description: skill.description,
                             otherUserId: skill.userId,
                             otherUserName: skill.userName,
-                            chatRepository: _chatRepository,
-                            // Enhanced features
+                            chatRepository: FirebaseChatService(),
                             category: skill.category,
                             createdAt: skill.createdAt,
                             skillId: skill.id,
-                            requestRepository: _requestRepository,
-                            currentUserSkills: _currentUserSkills,
+                            onDelete:
+                                currentUser?.id == skill.userId
+                                    ? () {
+                                      // Show loading and delete the skill
+                                      context.read<SkillBloc>().add(
+                                        SkillDeleteRequested(skill.id),
+                                      );
+
+                                      // Show success message
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            '${skill.name} deleted successfully',
+                                          ),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                    }
+                                    : null,
                           ),
                         );
                       },
