@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:skillsync/models/request_model.dart';
 import 'package:skillsync/repositories/request_repository.dart';
 import 'package:skillsync/repositories/firebase_chat.dart';
+import 'package:skillsync/repositories/rating_repository.dart';
 import 'package:skillsync/screens/chat_screen.dart';
+import 'package:skillsync/widgets/rating_dialog.dart';
 
 class RequestsScreen extends StatefulWidget {
   final RequestRepository requestRepository;
@@ -24,6 +26,7 @@ class _RequestsScreenState extends State<RequestsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final RatingRepository _ratingRepository = RatingRepository();
 
   @override
   void initState() {
@@ -44,18 +47,12 @@ class _RequestsScreenState extends State<RequestsScreen>
         title: const Text('Skill Swap Requests'),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Received'),
-            Tab(text: 'Sent'),
-          ],
+          tabs: const [Tab(text: 'Received'), Tab(text: 'Sent')],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildIncomingRequests(),
-          _buildOutgoingRequests(),
-        ],
+        children: [_buildIncomingRequests(), _buildOutgoingRequests()],
       ),
     );
   }
@@ -69,9 +66,7 @@ class _RequestsScreenState extends State<RequestsScreen>
         }
 
         if (snapshot.hasError) {
-          return Center(
-            child: Text('Error: ${snapshot.error}'),
-          );
+          return Center(child: Text('Error: ${snapshot.error}'));
         }
 
         final requests = snapshot.data ?? [];
@@ -113,9 +108,7 @@ class _RequestsScreenState extends State<RequestsScreen>
         }
 
         if (snapshot.hasError) {
-          return Center(
-            child: Text('Error: ${snapshot.error}'),
-          );
+          return Center(child: Text('Error: ${snapshot.error}'));
         }
 
         final requests = snapshot.data ?? [];
@@ -187,10 +180,7 @@ class _RequestsScreenState extends State<RequestsScreen>
                       ),
                       Text(
                         _formatDate(request.createdAt),
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                     ],
                   ),
@@ -301,17 +291,45 @@ class _RequestsScreenState extends State<RequestsScreen>
               ),
             ] else if (request.status == RequestStatus.accepted) ...[
               const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _openChat(request),
-                  icon: const Icon(Icons.chat_bubble_outline),
-                  label: const Text('Start Chat'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _openChat(request),
+                      icon: const Icon(Icons.chat_bubble_outline),
+                      label: const Text('Chat'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FutureBuilder<bool>(
+                      future: _ratingRepository.canRateSkillSwap(
+                        _auth.currentUser?.uid ?? '',
+                        request.id,
+                      ),
+                      builder: (context, snapshot) {
+                        final canRate = snapshot.data ?? false;
+                        return ElevatedButton.icon(
+                          onPressed:
+                              canRate
+                                  ? () => _showRatingDialog(request)
+                                  : () => _showExistingRating(request),
+                          icon: Icon(canRate ? Icons.star_border : Icons.star),
+                          label: Text(canRate ? 'Rate' : 'View Rating'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                canRate ? Colors.amber : Colors.grey,
+                            foregroundColor: Colors.white,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ],
@@ -359,10 +377,7 @@ class _RequestsScreenState extends State<RequestsScreen>
                       ),
                       Text(
                         _formatDate(request.createdAt),
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                     ],
                   ),
@@ -446,17 +461,45 @@ class _RequestsScreenState extends State<RequestsScreen>
             ],
             if (request.status == RequestStatus.accepted) ...[
               const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _openChat(request),
-                  icon: const Icon(Icons.chat_bubble_outline),
-                  label: const Text('Start Chat'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _openChat(request),
+                      icon: const Icon(Icons.chat_bubble_outline),
+                      label: const Text('Chat'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FutureBuilder<bool>(
+                      future: _ratingRepository.canRateSkillSwap(
+                        _auth.currentUser?.uid ?? '',
+                        request.id,
+                      ),
+                      builder: (context, snapshot) {
+                        final canRate = snapshot.data ?? false;
+                        return ElevatedButton.icon(
+                          onPressed:
+                              canRate
+                                  ? () => _showRatingDialog(request)
+                                  : () => _showExistingRating(request),
+                          icon: Icon(canRate ? Icons.star_border : Icons.star),
+                          label: Text(canRate ? 'Rate' : 'View Rating'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                canRate ? Colors.amber : Colors.grey,
+                            foregroundColor: Colors.white,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ],
@@ -468,7 +511,7 @@ class _RequestsScreenState extends State<RequestsScreen>
   Widget _buildStatusChip(RequestStatus status) {
     Color color;
     String text;
-    
+
     switch (status) {
       case RequestStatus.pending:
         color = Colors.orange;
@@ -567,12 +610,14 @@ class _RequestsScreenState extends State<RequestsScreen>
       final currentUser = _auth.currentUser;
       if (currentUser == null) return;
 
-      final otherUserId = currentUser.uid == request.requesterId 
-          ? request.targetUserId 
-          : request.requesterId;
-      final otherUserName = currentUser.uid == request.requesterId 
-          ? request.targetUserName 
-          : request.requesterName;
+      final otherUserId =
+          currentUser.uid == request.requesterId
+              ? request.targetUserId
+              : request.requesterId;
+      final otherUserName =
+          currentUser.uid == request.requesterId
+              ? request.targetUserName
+              : request.requesterName;
 
       final chatRoomId = await widget.chatRepository.createOrGetChatRoom(
         otherUserId: otherUserId,
@@ -584,12 +629,13 @@ class _RequestsScreenState extends State<RequestsScreen>
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ChatScreen(
-              chatRepository: widget.chatRepository,
-              chatRoomId: chatRoomId,
-              currentUserId: currentUser.uid,
-              otherUserName: otherUserName,
-            ),
+            builder:
+                (context) => ChatScreen(
+                  chatRepository: widget.chatRepository,
+                  chatRoomId: chatRoomId,
+                  currentUserId: currentUser.uid,
+                  otherUserName: otherUserName,
+                ),
           ),
         );
       }
@@ -602,6 +648,159 @@ class _RequestsScreenState extends State<RequestsScreen>
           ),
         );
       }
+    }
+  }
+
+  Future<void> _showRatingDialog(SkillSwapRequest request) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return;
+
+    final otherUserId =
+        currentUser.uid == request.requesterId
+            ? request.targetUserId
+            : request.requesterId;
+    final otherUserName =
+        currentUser.uid == request.requesterId
+            ? request.targetUserName
+            : request.requesterName;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => RatingDialog(
+            skillSwapId: request.id,
+            ratedUserId: otherUserId,
+            ratedUserName: otherUserName,
+            skillName:
+                '${request.requesterSkillName} ↔ ${request.targetSkillName}',
+            ratingRepository: _ratingRepository,
+          ),
+    );
+
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Rating submitted successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  Future<void> _showExistingRating(SkillSwapRequest request) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return;
+
+    try {
+      final rating = await _ratingRepository.getRatingForSkillSwap(
+        currentUser.uid,
+        request.id,
+      );
+
+      if (rating != null && mounted) {
+        showDialog(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: const Text('Your Rating'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        ...List.generate(5, (index) {
+                          return Icon(
+                            index < rating.rating
+                                ? Icons.star
+                                : Icons.star_border,
+                            color: Colors.amber,
+                            size: 24,
+                          );
+                        }),
+                        const SizedBox(width: 8),
+                        Text(
+                          rating.rating.toString(),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    if (rating.comment != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        'Comment: "${rating.comment}"',
+                        style: TextStyle(color: Colors.grey[700]),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Text(
+                      'Rated on: ${_formatDate(rating.createdAt)}',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _editRating(request, rating);
+                    },
+                    child: const Text('Edit'),
+                  ),
+                ],
+              ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading rating: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _editRating(SkillSwapRequest request, rating) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return;
+
+    final otherUserId =
+        currentUser.uid == request.requesterId
+            ? request.targetUserId
+            : request.requesterId;
+    final otherUserName =
+        currentUser.uid == request.requesterId
+            ? request.targetUserName
+            : request.requesterName;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => RatingDialog(
+            skillSwapId: request.id,
+            ratedUserId: otherUserId,
+            ratedUserName: otherUserName,
+            skillName:
+                '${request.requesterSkillName} ↔ ${request.targetSkillName}',
+            ratingRepository: _ratingRepository,
+            existingRating: rating,
+          ),
+    );
+
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Rating updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 }
